@@ -1,0 +1,108 @@
+#!/bin/python3
+import argparse
+import configparser
+import os
+import sys
+import re
+from subprocess import PIPE, STDOUT, Popen, run
+
+BOOKMARKS_PATH = os.environ["HOME"] + "/.bookmarks"
+BROWSER = os.environ["BROWSER"]
+
+
+def silent_run(*command):
+    with open(os.devnull, "w") as shutup:
+        run(command)
+
+
+def open_urls(urls):
+    if BROWSER:
+        silent_run(BROWSER, *urls)
+    else:
+        silent_run("exo-open", *urls)
+
+
+def open_bookmark_by_name(name, data):
+    url = find_url_by_name(name, data)
+    if not url:
+        return False
+    open_urls([url])
+    return True
+
+
+def get_urls_by_folder(folder, data):
+    if data.has_section(folder):
+        return [data[folder][item] for item in data.options(folder)]
+
+
+def find_url_by_name(bookmark_name, data):
+    for section in data:
+        if data.has_option(section, bookmark_name):
+            return data[section][bookmark_name]
+
+
+def list_bookmark_entries(data):
+    entries = []
+    for section in data:
+        if section == "DEFAULT":
+            continue
+        entries.append(f"#{section}")
+        for bm_name in data[section]:
+            entries.append(f"{bm_name} #{section}")
+    return entries
+
+
+def open_bookmark_by_query(query, data):
+    query = query.strip()
+    if query.startswith("#"):
+        urls = get_urls_by_folder(query[1:], data)
+        if urls:
+            open_urls(urls)
+            return True
+        else:
+            return False
+    else:
+        url = find_url_by_name(query.split("#", 1)[0].strip(), data)
+        if url:
+            open_urls([url])
+            return True
+        else:
+            return False
+
+
+####################### MAIN #######################
+parser = argparse.ArgumentParser(description="Simple bookmark manager")
+parser.add_argument("-o", "--open", metavar="NAME", nargs=1, type=str)
+parser.add_argument("-l", "--list", metavar="FOLDER", nargs="?", type=str)
+parser.add_argument("-d", "--dmenu", action="store_true")
+args = parser.parse_args()
+
+count_commands = sum(map(bool, [args.open, args.list, args.dmenu]))
+if count_commands != 1:
+    parser.error(f"bm accepts 1 command per call, " f"{count_commands} were given")
+    sys.exit()
+
+bm_data = configparser.ConfigParser()
+bm_data.read(BOOKMARKS_PATH)
+
+if args.open:
+    ok = open_bookmark_by_query(args.open[0], bm_data)
+    if not ok:
+        parser.error(f'bookmark or section "{args.open[0]}" was not found')
+
+if args.list:
+    if bm_data.has_section(args.list):
+        print("\n".join(bm_data.options(args.list)))
+    else:
+        parser.error(f'section "{args.list}" was not found')
+
+if args.dmenu:
+    choice = run(
+        "dmenu",
+        stdout=PIPE,
+        input=bytes("\n".join(list_bookmark_entries(bm_data)), encoding="utf-8"),
+    ).stdout
+    choice = choice.decode("utf-8")
+    ok = open_bookmark_by_query(choice, bm_data)
+    if not ok:
+        parser.error(f'cannot open "{choice.strip()}"')
