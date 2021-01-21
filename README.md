@@ -33,3 +33,4 @@ optional arguments:
 - [ ] avoid parsing bookmarks as a config file
 - [ ] support custom bookmarks file
 - [ ] support `bmd -l` to list all bookmarks
+- [ ] support `bmd -a` to add a bookmark
