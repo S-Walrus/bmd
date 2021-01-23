@@ -70,7 +70,7 @@ def open_urls_by_query(query, reader):
         else:
             return False
     else:
-        bm_name = query.split('#', 1)[0]
+        bm_name = query.split('#', 1)[0].strip()
         url = get_url_by_name(bm_name, reader)
         if url:
             open_urls([url])
@@ -159,7 +159,7 @@ if args.list:
         print('\n'.join(iterate_bookmarks_in_section(args.list, open_bm_file())))
 
 if args.dmenu:
-    p = Popen('dmenu', stdin=PIPE)
+    p = Popen('dmenu', stdin=PIPE, stdout=PIPE)
     bm_reader = open_bm_file()
     entries = iterate_entries(bm_reader)
     for line in entries:
@@ -171,12 +171,13 @@ if args.dmenu:
             else:
                 raise
 
+    output, err = p.communicate()
+    output = str(output, "utf-8").strip()
+
     p.stdin.close()
     p.wait()
 
-    output, err = p.communicate()
-
     ok = open_urls_by_query(output, open_bm_file())
     if not ok:
-        # TODO show error
+        parser.error(f'cannot open "{output}"')
         pass
