@@ -29,8 +29,8 @@ optional arguments:
 ```
 
 ### TODO
-- [ ] automatically create `.bookmarks` file if it doesn't exist
-- [ ] avoid parsing bookmarks as a config file
-- [ ] support custom bookmarks file
-- [ ] support `bmd -l` to list all bookmarks
-- [ ] support `bmd -a` to add a bookmark
+- [x] automatically create `.bookmarks` file if it doesn't exist
+- [x] avoid parsing bookmarks as a config file
+- [x] support custom bookmarks file
+- [x] support `bmd -l` to list all bookmarks
+- [x] support `bmd -a` to add a bookmark

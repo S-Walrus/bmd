@@ -135,15 +135,20 @@ def add_bookmark(section, name, url):
 
 ####################### MAIN #######################
 parser = argparse.ArgumentParser(description="Simple bookmark manager")
-parser.add_argument("-o", "--open", metavar="NAME", nargs=1, type=str)
-parser.add_argument("-l", "--list", metavar="FOLDER", nargs="?", const="DEFAULT", type=str)
-parser.add_argument("-d", "--dmenu", action="store_true")
-parser.add_argument("-a", "--add", metavar="NAME", nargs=3, type=str)
-parser.add_argument("-c", "--data", metavar="NAME", nargs=1, type=str)
+parser.add_argument("-o", "--open", nargs=1,
+                    help="open a bookmark or a group", metavar="QUERY")
+parser.add_argument("-l", "--list", nargs="?",
+                    help="list bookmarks", metavar="SECTION", const="DEFAULT")
+parser.add_argument("-d", "--dmenu", action="store_true",
+                    help="open dmenu")
+parser.add_argument("-a", "--add", nargs=3,
+                    help="add a bookmark", metavar=("GROUP", "NAME", "URL"))
+parser.add_argument("-c", "--config", nargs=1,
+                    help="specify data file", metavar="PATH")
 args = parser.parse_args()
 
-if args.data:
-    BOOKMARKS_PATH = args.data[0]
+if args.config:
+    BOOKMARKS_PATH = args.config[0]
 
 count_commands = sum(map(bool, [args.open, args.list, args.dmenu, args.add]))
 if count_commands != 1:
