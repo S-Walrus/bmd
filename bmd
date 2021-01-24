@@ -15,12 +15,6 @@ def create_bm_file():
     ok = Path(BOOKMARKS_PATH).touch()
 
 
-def open_bm_file(write=False):
-    if write:
-        return open(BOOKMARKS_PATH, 'rw')
-    return open(BOOKMARKS_PATH)
-
-
 def jump_to_section(section, reader):
     for line in reader:
         if line.strip() == f"[{section}]":
@@ -126,12 +120,25 @@ def split_bm_line(line):
     return line[:split_pos].strip(), line[split_pos+1:].strip()
 
 
+def add_bookmark(section, name, url):
+    with open(BOOKMARKS_PATH) as f:
+        lines = f.readlines()
+    i = 0
+    while i < len(lines) and lines[i].strip() != f"[{section}]":
+        i += 1
+    if i == len(lines):
+        lines.append(f"[{section}]\n")
+    lines.insert(i + 1, f"{name}: {url}\n")
+    with open(BOOKMARKS_PATH, 'w') as f:
+        f.write(''.join(lines))
+
+
 ####################### MAIN #######################
 parser = argparse.ArgumentParser(description="Simple bookmark manager")
 parser.add_argument("-o", "--open", metavar="NAME", nargs=1, type=str)
 parser.add_argument("-l", "--list", metavar="FOLDER", nargs="?", const="DEFAULT", type=str)
 parser.add_argument("-d", "--dmenu", action="store_true")
-parser.add_argument("-a", "--add", metavar="NAME", nargs=2, type=str)
+parser.add_argument("-a", "--add", metavar="NAME", nargs=3, type=str)
 parser.add_argument("-c", "--data", metavar="NAME", nargs=1, type=str)
 args = parser.parse_args()
 
@@ -148,19 +155,24 @@ if not Path(BOOKMARKS_PATH).exists():
     print(f"created new bookmarks file at {BOOKMARKS_PATH}")
 
 if args.open:
-    ok = open_urls_by_query(args.open[0], open_bm_file())
+    ok = open_urls_by_query(args.open[0], open(BOOKMARKS_PATH))
     if not ok:
         parser.error(f'bookmark or section "{args.open[0]}" was not found')
 
 if args.list:
     if args.list == "DEFAULT":
-        print('\n'.join(iterate_entries(open_bm_file())))
+        print('\n'.join(iterate_entries(open(BOOKMARKS_PATH))))
     else:
-        print('\n'.join(iterate_bookmarks_in_section(args.list, open_bm_file())))
+        print('\n'.join(iterate_bookmarks_in_section(args.list, open(BOOKMARKS_PATH))))
+
+if args.add:
+    section, name, url = args.add
+    add_bookmark(section, name, url)
+    print(f"bookmark \"{name}\" added to group \"{section}\"")
 
 if args.dmenu:
     p = Popen('dmenu', stdin=PIPE, stdout=PIPE)
-    bm_reader = open_bm_file()
+    bm_reader = open(BOOKMARKS_PATH)
     entries = iterate_entries(bm_reader)
     for line in entries:
         try:
@@ -177,7 +189,7 @@ if args.dmenu:
     p.stdin.close()
     p.wait()
 
-    ok = open_urls_by_query(output, open_bm_file())
+    ok = open_urls_by_query(output, open(BOOKMARKS_PATH))
     if not ok:
         parser.error(f'cannot open "{output}"')
         pass
