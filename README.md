@@ -17,15 +17,21 @@ All bookmarks are organized into groups.
 
 ### Usage
 ```
-usage: bmd [-h] [-o NAME] [-l [FOLDER]] [-d]
+usage: bmd [-h] [-o QUERY] [-l [SECTION]] [-d] [-a GROUP NAME URL] [-c PATH]
 
 Simple bookmark manager
 
 optional arguments:
   -h, --help            show this help message and exit
-  -o NAME, --open NAME  open a bookmark or a whole group
-  -l [GROUP], --list [GROUP]    list all bookmarks or content of GROUP 
-  -d, --dmenu           open dmenu to choose a bookmark or a group
+  -o QUERY, --open QUERY
+                        open a bookmark or a group
+  -l [SECTION], --list [SECTION]
+                        list bookmarks
+  -d, --dmenu           open dmenu
+  -a GROUP NAME URL, --add GROUP NAME URL
+                        add a bookmark
+  -c PATH, --config PATH
+                        specify data file
 ```
 
 ### TODO
